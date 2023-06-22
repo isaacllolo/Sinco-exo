@@ -149,7 +149,7 @@ if __name__ == "__main__":
 #        bpy.utils.register_class(ModalTimerOperator)
        
         # Start receiving data from Arduino in a separate thread
-        receive_thread = threading.Thread(target=receive_from_esp8266)
+        receive_thread = threading.Thread(target=receive_from_esp8266 ,daemon=True)
         
         receive_thread.start()
         
