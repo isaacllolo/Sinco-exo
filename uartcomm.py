@@ -153,7 +153,7 @@ if __name__ == "__main__":
         
         receive_thread.start()
         
-        receive_thread.join()
+
        
      
         
