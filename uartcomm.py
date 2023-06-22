@@ -120,7 +120,7 @@ def receive_from_esp8266():
     url = 'http://192.168.1.51/'
 
     while True:
-        buffer=np.array([])
+        buffer=[]
         try:
             for i in range(10):
                 # Realizar la solicitud HTTP
@@ -129,7 +129,7 @@ def receive_from_esp8266():
 
                 data = response.text
 #                print(data)
-                np.append(buffer,data)
+                buffer.append(data)
                 time.sleep(0.5)
             print("---------------------- 3 send data to bone 2---------------------------")
             process_received_data(buffer)  
