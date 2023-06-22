@@ -120,8 +120,9 @@ def receive_from_esp8266():
     url = 'http://192.168.1.51/'
 
     while True:
-        buffer=[]
+        
         try:
+            buffer=[]
             for i in range(10):
                 # Realizar la solicitud HTTP
                 response = requests.get(url)
