@@ -68,7 +68,10 @@ bones = {
     "right_leg_upper": armature.pose.bones.get("J_Bip_R_UpperLeg"),
     "right_leg_lower": armature.pose.bones.get("J_Bip_R_LowerLeg"),
     "left_hand": armature.pose.bones.get("J_Bip_L_Hand"),
-    "right_hand": armature.pose.bones.get("J_Bip_R_Hand")
+    "right_hand": armature.pose.bones.get("J_Bip_R_Hand"),
+    "left_foot": armature.pose.bones.get("J_Bip_L_Foot"),
+    "right_foot": armature.pose.bones.get("J_Bip_R_Foot")
+
 }
 
        
@@ -90,27 +93,97 @@ def process_received_data(buffer):
         try:
             parsed_data = json.loads(data)
             print(parsed_data)
-            if("gXHD" in parsed_data[0] and "gXCOD" in parsed_data[1]):
-                bone_left_arm_upper = bones.get("left_arm_upper")
+            #BRAZO DERECHO
+            if("gXHD" in parsed_data[0] and "gXCOD" in parsed_data[1] and"gXMD" in parsed_data[2]):
+                bone_right_arm_upper = bones.get("right_arm_upper")
                 q0= np.array([0,float(parsed_data[0]["gXHD"]), float(parsed_data[0]["gYHD"]), float(parsed_data[0]["gZHD"])])
-                bone_left_arm_lower = bones.get("left_arm_lower")
+                bone_right_arm_lower = bones.get("right_arm_lower")
                 q1 = np.array([0,float(parsed_data[1]["gXCOD"]), float(parsed_data[1]["gYCOD"]), float(parsed_data[1]["gZCOD"])])
-     
-                # get inverse transformation of q0, the parent bone
+                bone_right_hand = bones.get("right_hand")
+                q2=np.array([0, float(parsed_data[2]["gXMD"]), float(parsed_data[2]["gYMD"]), float(parsed_data[2]["gZMD"])])
+                # get inverse transformation of q1, the parent bone
                 q0_inv = q0 * np.array([1, -1, -1, -1])
-                
+                # get inverse transformation of q1, the parent bone
+                q1_inv = q1* np.array([1, -1, -1, -1])
                 # rotate child about parent, to get relative position of the child
                 q1_rel = multiplyQuaternion(q0_inv, q1)
+                # rotate child about parent, to get relative position of the child
+                q2_rel = multiplyQuaternion(q1_inv, q2)
                 
                 # apply transformation
-                setBoneRotation(bone_left_arm_upper, q0)
-                setBoneRotation(bone_left_arm_lower, q1)
+                setBoneRotation(bone_right_arm_upper, q0)
+                setBoneRotation(bone_right_arm_lower, q1_rel)
+                setBoneRotation(bone_right_hand, q2_rel)
             
-            if("gXMD" in parsed_data[2]):
+            #BRAZO IZQUIERDO
+            if("gXHI" in parsed_data[3] and "gXCOI" in parsed_data[4] and"gXMI" in parsed_data[5]):
+                bone_left_arm_upper = bones.get("left_arm_upper")
+                q3= np.array([0,float(parsed_data[3]["gXHI"]), float(parsed_data[3]["gYHI"]), float(parsed_data[3]["gZHI"])])
+                bone_left_arm_lower = bones.get("left_arm_lower")
+                q4 = np.array([0,float(parsed_data[4]["gXCOI"]), float(parsed_data[4]["gYCOI"]), float(parsed_data[4]["gZCOI"])])
                 bone_left_hand = bones.get("left_hand")
-                bone_left_hand.rotation_quaternion = [0, float(parsed_data[2]["gXMD"]), float(parsed_data[2]["gYMD"]), float(parsed_data[2]["gZMD"])]
-
-            
+                q5=np.array([0, float(parsed_data[5]["gXMI"]), float(parsed_data[5]["gYMI"]), float(parsed_data[5]["gZMI"])])
+                # get inverse transformation of q1, the parent bone
+                q3_inv = q3 * np.array([1, -1, -1, -1])
+                # get inverse transformation of q1, the parent bone
+                q4_inv = q4* np.array([1, -1, -1, -1])
+                # rotate child about parent, to get relative position of the child
+                q4_rel = multiplyQuaternion(q3_inv, q4)
+                # rotate child about parent, to get relative position of the child
+                q5_rel = multiplyQuaternion(q4_inv, q5)
+                
+                # apply transformation
+                setBoneRotation(bone_left_arm_upper, q3)
+                setBoneRotation(bone_left_arm_lower, q4_rel)
+                setBoneRotation(bone_left_hand, q5_rel)
+        #PIERNA DERECHA
+            if("gXCAD" in parsed_data[6] and "gXRD" in parsed_data[7] and"gXTD" in parsed_data[8]):
+                bone_right_leg_upper = bones.get("right_leg_upper")
+                q6= np.array([0,float(parsed_data[6]["gXCAD"]), float(parsed_data[6]["gYCAD"]), float(parsed_data[6]["gZCAD"])])
+                bone_right_leg_lower = bones.get("right_leg_lower")
+                q7 = np.array([0,float(parsed_data[7]["gXRD"]), float(parsed_data[7]["gYRD"]), float(parsed_data[7]["gZRD"])])
+                bone_right_foot = bones.get("right_foot")
+                q8=np.array([0, float(parsed_data[8]["gXTD"]), float(parsed_data[8]["gYTD"]), float(parsed_data[8]["gZTD"])])
+                # get inverse transformation of q7, the parent bone
+                q6_inv = q6 * np.array([1, -1, -1, -1])
+                # get inverse transformation of q1, the parent bone
+                q7_inv = q7* np.array([1, -1, -1, -1])
+                # rotate child about parent, to get relative position of the child
+                q7_rel = multiplyQuaternion(q6_inv, q7)
+                # rotate child about parent, to get relative position of the child
+                q8_rel = multiplyQuaternion(q7_inv, q8)
+                
+                # apply transformation
+                setBoneRotation(bone_right_leg_upper, q6)
+                setBoneRotation(bone_right_leg_lower, q7_rel)
+                setBoneRotation(bone_right_foot, q8_rel)
+                #PIERNA IZQUIERDA
+            if("gXCAI" in parsed_data[9] and "gXRI" in parsed_data[10] and"gXTI" in parsed_data[11]):
+                bone_left_leg_upper = bones.get("left_leg_upper")
+                q9= np.array([0,float(parsed_data[9]["gXCAI"]), float(parsed_data[9]["gYCAI"]), float(parsed_data[9]["gZCAI"])])
+                bone_left_leg_lower = bones.get("left_leg_lower")
+                q10 = np.array([0,float(parsed_data[10]["gXRI"]), float(parsed_data[10]["gYRD"]), float(parsed_data[10]["gZRI"])])
+                bone_left_foot = bones.get("left_foot")
+                q11=np.array([0, float(parsed_data[11]["gXTI"]), float(parsed_data[11]["gYTI"]), float(parsed_data[11]["gZTI"])])
+                # get inverse transformation of q10, the parent bone
+                q9_inv = q9 * np.array([1, -1, -1, -1])
+                # get inverse transformation of q1, the parent bone
+                q10_inv = q10* np.array([1, -1, -1, -1])
+                # rotate child about parent, to get relative position of the child
+                q10_rel = multiplyQuaternion(q9_inv, q10)
+                # rotate child about parent, to get relative position of the child
+                q11_rel = multiplyQuaternion(q10_inv, q11)
+                
+                # apply transformation
+                setBoneRotation(bone_left_leg_upper, q9)
+                setBoneRotation(bone_left_leg_lower, q10_rel)
+                setBoneRotation(bone_left_foot, q11_rel)
+            #CABEZA
+            if("gXCA" in parsed_data[12] ): 
+                bone_head = bones.get("head")
+                q12=np.array([0, float(parsed_data[12]["gXCA"]), float(parsed_data[12]["gYCA"]), float(parsed_data[12]["gZCA"])])
+                # apply transformation
+                setBoneRotation(bone_head, q12)
             print("Received data from Arduino")
         except json.JSONDecodeError as e:
             print("Error decoding received data:", e)
