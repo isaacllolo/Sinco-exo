@@ -1,0 +1,4 @@
+import upip
+
+# Instalar la biblioteca mpu6050
+upip.install("micropython-mpu6050")
