@@ -95,10 +95,13 @@ def process_received_data(buffer):
             print(parsed_data)
             #BRAZO DERECHO
             if("gXHD" in parsed_data[0] and "gXCOD" in parsed_data[1] and"gXMD" in parsed_data[2]):
+                #BRAZO SUPERIOR
                 bone_right_arm_upper = bones.get("right_arm_upper")
                 q0= np.array([0,float(parsed_data[0]["gXHD"]), float(parsed_data[0]["gYHD"]), float(parsed_data[0]["gZHD"])])
+                #BRAZO INFERIOR
                 bone_right_arm_lower = bones.get("right_arm_lower")
                 q1 = np.array([0,float(parsed_data[1]["gXCOD"]), float(parsed_data[1]["gYCOD"]), float(parsed_data[1]["gZCOD"])])
+                #MANO
                 bone_right_hand = bones.get("right_hand")
                 q2=np.array([0, float(parsed_data[2]["gXMD"]), float(parsed_data[2]["gYMD"]), float(parsed_data[2]["gZMD"])])
                 # get inverse transformation of q1, the parent bone
@@ -117,10 +120,13 @@ def process_received_data(buffer):
             
             #BRAZO IZQUIERDO
             if("gXHI" in parsed_data[3] and "gXCOI" in parsed_data[4] and"gXMI" in parsed_data[5]):
+                #BRAZO SUPERIOR
                 bone_left_arm_upper = bones.get("left_arm_upper")
                 q3= np.array([0,float(parsed_data[3]["gXHI"]), float(parsed_data[3]["gYHI"]), float(parsed_data[3]["gZHI"])])
+                #BRAZO INFERIOR
                 bone_left_arm_lower = bones.get("left_arm_lower")
                 q4 = np.array([0,float(parsed_data[4]["gXCOI"]), float(parsed_data[4]["gYCOI"]), float(parsed_data[4]["gZCOI"])])
+                #MANO
                 bone_left_hand = bones.get("left_hand")
                 q5=np.array([0, float(parsed_data[5]["gXMI"]), float(parsed_data[5]["gYMI"]), float(parsed_data[5]["gZMI"])])
                 # get inverse transformation of q1, the parent bone
@@ -138,10 +144,13 @@ def process_received_data(buffer):
                 setBoneRotation(bone_left_hand, q5_rel)
         #PIERNA DERECHA
             if("gXCAD" in parsed_data[6] and "gXRD" in parsed_data[7] and"gXTD" in parsed_data[8]):
+                #PIERNA SUPERIOR
                 bone_right_leg_upper = bones.get("right_leg_upper")
                 q6= np.array([0,float(parsed_data[6]["gXCAD"]), float(parsed_data[6]["gYCAD"]), float(parsed_data[6]["gZCAD"])])
+                #PIERNA INFERIOR
                 bone_right_leg_lower = bones.get("right_leg_lower")
                 q7 = np.array([0,float(parsed_data[7]["gXRD"]), float(parsed_data[7]["gYRD"]), float(parsed_data[7]["gZRD"])])
+                #TOBILLO
                 bone_right_foot = bones.get("right_foot")
                 q8=np.array([0, float(parsed_data[8]["gXTD"]), float(parsed_data[8]["gYTD"]), float(parsed_data[8]["gZTD"])])
                 # get inverse transformation of q7, the parent bone
@@ -159,10 +168,13 @@ def process_received_data(buffer):
                 setBoneRotation(bone_right_foot, q8_rel)
                 #PIERNA IZQUIERDA
             if("gXCAI" in parsed_data[9] and "gXRI" in parsed_data[10] and"gXTI" in parsed_data[11]):
+                #PIERNA SUPERIOR
                 bone_left_leg_upper = bones.get("left_leg_upper")
                 q9= np.array([0,float(parsed_data[9]["gXCAI"]), float(parsed_data[9]["gYCAI"]), float(parsed_data[9]["gZCAI"])])
+                #PIERNA INFERIOR
                 bone_left_leg_lower = bones.get("left_leg_lower")
                 q10 = np.array([0,float(parsed_data[10]["gXRI"]), float(parsed_data[10]["gYRD"]), float(parsed_data[10]["gZRI"])])
+                #TOBILLO
                 bone_left_foot = bones.get("left_foot")
                 q11=np.array([0, float(parsed_data[11]["gXTI"]), float(parsed_data[11]["gYTI"]), float(parsed_data[11]["gZTI"])])
                 # get inverse transformation of q10, the parent bone
