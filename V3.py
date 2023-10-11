@@ -16,10 +16,13 @@ class Bone:
         self.joint1 = joint1
         self.joint2 = joint2
         self.connection = curve(pos=[joint1.position, joint2.position], radius=0.05, color=color.red)
-
+    def update(self):
+        # Actualiza la posición de los puntos en la curva existente
+        self.connection.modify(0, pos=self.joint1.position)
+        self.connection.modify(1, pos=self.joint2.position)
+        self.connection.visible = True  # Asegura que el hueso esté visible    
 class Skeleton3D:
     def __init__(self):
-        self.scene = canvas(title="Esqueleto 3D", width=800, height=600)
 
         # Crear las articulaciones con límites de ángulo
         self.joints = {
@@ -58,40 +61,53 @@ class Skeleton3D:
             'RightKneeToRightAnkle': Bone('RightKneeToRightAnkle', self.joints['RightKnee'], self.joints['RightAnkle']),
         }
 
-        self.is_update_enabled = True
+        #self.is_update_enabled = True
 
     def update(self, target_positions):
-        if self.is_update_enabled:
+        #if self.is_update_enabled:
             # Ajustar las articulaciones basadas en las posiciones objetivo
             for joint_name, target_position in target_positions.items():
+               # print("Actualizando esqueleto 3D...")
                 self.adjust_joint(joint_name, target_position)
+            for self.bone in self.bones.values():
+                self.bone.update()
 
     def adjust_joint(self, joint_name, target_position):
         joint = self.joints[joint_name]
+        #print(self.joints['RightElbow'].position)
         joint.position = target_position
+        joint.sphere.pos = joint.position
+    
 
-# Crear una instancia del esqueleto 3D
+# Crear una instancia del esqueleto 3
 skeleton_3d = Skeleton3D()
 scene = canvas(title="Esqueleto 3D", width=800, height=600, center=vector(0, 0, 0))
 
 # Bucle de simulación para actualizar el esqueleto con datos simulados
 while True:
-    rate(60)
+    rate(15)
     # Posiciones objetivo para cada articulación (valores simulados)
     target_positions = {
-        'LeftWrist': vector(1, 1, 0),
-        'RightWrist': vector(-2, 0, 0),
-        'LeftElbow': vector(-2, 1, -2),
-        'RightElbow': vector(2, 2, 0),
-        'LeftShoulder': vector(-1, 2, 0),
-        'RightShoulder': vector(1, 2, 0),
-        'Chest': vector(0, 2, 0),
-        'Head': vector(2, 2.75, 3),
-        'LeftAnkle': vector(-0.5, -4, 0),
-        'RightAnkle': vector(0.5, -4, 0),
-        'LeftKnee': vector(-0.5, -2, 0),
-        'RightKnee': vector(0.5, -2, 0),
-        'LeftHip': vector(-0.5, 0, 0),
-        'RightHip': vector(0.5, 0, 0),
+        
+       
+        'Hip': vector(0, 0, 0),          # Cadera (Hip)
+        'Chest': vector(0, 2, 0),        # Pecho (Chest)
+        'Head': vector(0, 2.75, 0),      # Cabeza (Head)
+        'LeftShoulder': vector(-1, 2, 0), # Hombro Izquierdo (LeftShoulder)
+        'RightShoulder': vector(1, 2, 0), # Hombro Derecho (RightShoulder)
+        'LeftElbow': vector(-2, 1, 0),   # Codo Izquierdo (LeftElbow)
+        'RightElbow': vector(2, 1, 0),   # Codo Derecho (RightElbow)
+        'LeftWrist': vector(-3, 1, 0),   # Muñeca Izquierda (LeftWrist)
+        'RightWrist': vector(3, 1, 0),   # Muñeca Derecha (RightWrist)
+        'LeftHip': vector(-0.5, 0, 0),   # Cadera Izquierda (LeftHip)
+        'RightHip': vector(0.5, 0, 0),   # Cadera Derecha (RightHip)
+        'LeftKnee': vector(-0.5, -2, 0), # Rodilla Izquierda (LeftKnee)
+        'RightKnee': vector(0.5, -2, 0), # Rodilla Derecha (RightKnee)
+        'LeftAnkle': vector(-0.5, -4, 0), # Tobillo Izquierdo (LeftAnkle)
+        'RightAnkle': vector(0.5, -4, 0) # Tobillo Derecho (RightAnkle)
+
     }
+    
     skeleton_3d.update(target_positions)
+    
+
