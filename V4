@@ -1,0 +1,120 @@
+import math
+from vpython import *
+
+class Joint:
+    def __init__(self, name, position, min_angle=None, max_angle=None, parent=None):
+        self.name = name
+        self.position = position
+        self.min_angle = min_angle
+        self.max_angle = max_angle
+        self.sphere = sphere(pos=position, radius=0.2, color=color.blue)
+        self.parent = parent
+        self.length = None
+
+class Bone:
+    def __init__(self, name, joint1, joint2):
+        self.name = name
+        self.joint1 = joint1
+        self.joint2 = joint2
+        self.connection = curve(pos=[joint1.position, joint2.position], radius=0.05, color=color.red)
+        self.update()
+
+    def update(self):
+        self.connection.modify(0, pos=self.joint1.position)
+        self.connection.modify(1, pos=self.joint2.position)
+        self.connection.visible = True
+
+class Skeleton3D:
+    def __init__(self):
+        self.joints = {
+            'Hip': Joint('Hip', vector(0, 0, 0)),
+            'Chest': Joint('Chest', vector(0, 2, 0), parent='Hip'),
+            'Head': Joint('Head', vector(0, 2.75, 0), parent='Chest'),
+            'LeftShoulder': Joint('LeftShoulder', vector(-1, 2, 0), parent='Chest'),
+            'RightShoulder': Joint('RightShoulder', vector(1, 2, 0), parent='Chest'),
+            'LeftElbow': Joint('LeftElbow', vector(-2, 1, 0), -math.pi/2, math.pi/2, parent='LeftShoulder'),
+            'RightElbow': Joint('RightElbow', vector(2, 1, 0), -math.pi/2, math.pi/2, parent='RightShoulder'),
+            'LeftWrist': Joint('LeftWrist', vector(-3, 1, 0), -math.pi/4, math.pi/4 ,parent='LeftElbow'),
+            'RightWrist': Joint('RightWrist', vector(3, 1, 0), -math.pi/4, math.pi/4 , parent='RightElbow'),
+            'LeftHip': Joint('LeftHip', vector(-0.5, 0, 0), -math.pi/4, math.pi/4, parent='Hip'),
+            'RightHip': Joint('RightHip', vector(0.5, 0, 0), -math.pi/4, math.pi/4, parent='Hip'),
+            'LeftKnee': Joint('LeftKnee', vector(-0.5, -2, 0), -math.pi/2, math.pi/2, parent='LeftHip'),
+            'RightKnee': Joint('RightKnee', vector(0.5, -2, 0), -math.pi/2, math.pi/2, parent='RightHip'),
+            'LeftAnkle': Joint('LeftAnkle', vector(-0.5, -4, 0), -math.pi/4, parent='LeftKnee'),
+            'RightAnkle': Joint('RightAnkle', vector(0.5, -4, 0), -math.pi/4, parent='RightKnee'),
+        }
+
+        self.bones = {
+            'HipToChest': Bone('HipToChest', self.joints['Hip'], self.joints['Chest']),
+            'ChestToHead': Bone('ChestToHead', self.joints['Chest'], self.joints['Head']),
+            'ChestToLeftShoulder': Bone('ChestToLeftShoulder', self.joints['Chest'], self.joints['LeftShoulder']),
+            'ChestToRightShoulder': Bone('ChestToRightShoulder', self.joints['Chest'], self.joints['RightShoulder']),
+            'LeftShoulderToLeftElbow': Bone('LeftShoulderToLeftElbow', self.joints['LeftShoulder'], self.joints['LeftElbow']),
+            'RightShoulderToRightElbow': Bone('RightShoulderToRightElbow', self.joints['RightShoulder'], self.joints['RightElbow']),
+            'LeftElbowToLeftWrist': Bone('LeftElbowToLeftWrist', self.joints['LeftElbow'], self.joints['LeftWrist']),
+            'RightElbowToRightWrist': Bone('RightElbowToRightWrist', self.joints['RightElbow'], self.joints['RightWrist']),
+            'HipToLeftHip': Bone('HipToLeftHip', self.joints['Hip'], self.joints['LeftHip']),
+            'HipToRightHip': Bone('HipToRightHip', self.joints['Hip'], self.joints['RightHip']),
+            'LeftHipToLeftKnee': Bone('LeftHipToLeftKnee', self.joints['LeftHip'], self.joints['LeftKnee']),
+            'RightHipToRightKnee': Bone('RightHipToRightKnee', self.joints['RightHip'], self.joints['RightKnee']),
+            'LeftKneeToLeftAnkle': Bone('LeftKneeToLeftAnkle', self.joints['LeftKnee'], self.joints['LeftAnkle']),
+            'RightKneeToRightAnkle': Bone('RightKneeToRightAnkle', self.joints['RightKnee'], self.joints['RightAnkle']),
+        }
+
+    def update(self, target_positions):
+        for joint_name, target_position in target_positions.items():
+            self.adjust_joint(joint_name, target_position)
+        for self.bone in self.bones.values():
+            self.bone.update()
+
+    def adjust_joint(self, joint_name, target_position):
+        joint = self.joints[joint_name]
+        joint.position = target_position
+        joint.sphere.pos = joint.position
+
+        for child_name in self.get_children(joint_name):
+            self.adjust_child_joint(child_name, joint_name)
+
+    def adjust_child_joint(self, joint_name, parent_name):
+        joint = self.joints[joint_name]
+        parent_joint = self.joints[parent_name]
+
+        if parent_joint.length is not None:
+            # Usar cinemática inversa para calcular la posición del hijo
+            angle = parent_joint.position - joint.position
+            distance = mag(angle)
+            if distance > parent_joint.length:
+                angle = norm(angle) * parent_joint.length
+                joint.position = parent_joint.position - angle
+                joint.sphere.pos = joint.position
+            else:
+                # La posición es válida
+                joint.sphere.pos = joint.position
+
+    def get_children(self, joint_name):
+        return [name for name, joint in self.joints.items() if joint.parent == joint_name]
+
+skeleton_3d = Skeleton3D()
+scene = canvas(title="Esqueleto 3D", width=800, height=600, center=vector(0, 0, 0))
+
+while True:
+    rate(15)
+    target_positions = {
+        'Hip': vector(0, 0, 0),
+        'Chest': vector(0, 2, 0),
+        'Head': vector(0, 2.75, 0),
+        'LeftShoulder': vector(-1, 2, 0),
+        'RightShoulder': vector(1, 2, 0),
+        'LeftElbow': vector(-2, 1, 0),
+        'RightElbow': vector(2, 1, 0),
+        'LeftWrist': vector(-3, 1, 0),
+        'RightWrist': vector(3, 1, 0),
+        'LeftHip': vector(-0.5, 0, 0),
+        'RightHip': vector(0.5, 0, 0),
+        'LeftKnee': vector(-0.5, -2, 0),
+        'RightKnee': vector(0.5, -2, 0),
+        'LeftAnkle': vector(-0.5, -4, 0),
+        'RightAnkle': vector(0.5, -4, 0)
+    }
+
+    skeleton_3d.update(target_positions)
