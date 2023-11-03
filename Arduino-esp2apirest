@@ -1,0 +1,1310 @@
+#include <Wire.h>
+#include <ESP8266WiFi.h>
+#include <Arduino.h>
+#include <ESPAsyncTCP.h>
+#include <ESPAsyncWebServer.h>
+//#include <MPU6050.h>
+#include <Adafruit_Sensor.h>
+#include <Arduino_JSON.h>
+#include <FS.h>
+#include "MPU6050_6Axis_MotionApps612.h"
+
+
+
+#define MUX_ADDRESS 0x68
+
+//const char* ssid = "LAB INTELIGENCIA_RED PARA TODOS";
+//const char* password = "Lab inteligencia@3187088*";
+//const char* ssid = "Illolo";
+//const char* password = "c1234567";//ingsisMAY23";
+//const char* ssid = "PC";
+//const char* password = "12345678";
+
+//const char* ssid = "PIMIENTA";
+//const char* password = "J0613Apv0100";
+
+const char* ssid = "UNE_HFC_6A26";
+const char* password = "YR0V4WQ0";
+
+//---------------------------added-----------------------------------------
+const int S0 = 2;
+const int S1 = 14;
+const int S2 = 12;
+const int S3 = 13;
+
+const int in = 0;
+
+
+
+// Create a sensor object
+MPU6050 mpu;
+
+//BRAZO DERECHO
+int16_t gXHD, gYHD, gZHD;
+int16_t aXHD, aYHD, aZHD;
+
+int16_t gXCOD, gYCOD, gZCOD;
+int16_t aXCOD, aYCOD, aZCOD;
+
+int16_t gXMD, gYMD, gZMD;
+int16_t aXMD, aYMD, aZMD;
+//*************************************
+
+//PIERNA DERECHA
+int16_t gXCAD, gYCAD, gZCAD;
+int16_t aXCAD, aYCAD, aZCAD;
+
+int16_t gXRD, gYRD, gZRD;
+int16_t aXRD, aYRD, aZRD;
+
+int16_t gXTD, gYTD, gZTD;
+int16_t aXTD, aYTD, aZTD;
+//*************************************
+
+//BRAZO IZQUIERDO
+int16_t gXHI, gYHI, gZHI;
+int16_t aXHI, aYHI, aZHI;
+
+int16_t gXCOI, gYCOI, gZCOI;
+int16_t aXCOI, aYCOI, aZCOI;
+
+int16_t gXMI, gYMI, gZMI;
+int16_t aXMI, aYMI, aZMI;
+//*************************************
+
+//PIERNA IZQUIERDA
+int16_t gXCAI, gYCAI, gZCAI;
+int16_t aXCAI, aYCAI, aZCAI;
+
+int16_t gXRI, gYRI, gZRI;
+int16_t aXRI, aYRI, aZRI;
+
+int16_t gXTI, gYTI, gZTI;
+int16_t aXTI, aYTI, aZTI;
+//*************************************
+
+//CABEZA
+int16_t gXCA, gYCA, gZCA;
+int16_t aXCA, aYCA, aZCA;
+//*************************************
+
+//*****************************************************************
+//********BRAZO DERECHO*******
+//giroscopio 1 conectado a C2 - HOMBRO
+void out1() {
+  //c2
+  digitalWrite(S0, LOW);    //0
+  digitalWrite(S1, HIGH);   //1
+  digitalWrite(S2, LOW);    //0
+  digitalWrite(S3, LOW);    //0
+  //0010 = pin c2 del multiplexor
+}
+
+//giroscopio 2 conectado a C3 - CODO
+void out2() {
+  //c3
+  digitalWrite(S0, HIGH);  //1
+  digitalWrite(S1, HIGH);  //1
+  digitalWrite(S2, LOW);   //0
+  digitalWrite(S3, LOW);   //0
+
+  //0011 = pin c3 del multiplexor
+}
+
+//giroscopio 3 conectado a C4 - MUÑECA
+void out3() {
+  //c4
+  digitalWrite(S0, LOW);   //0
+  digitalWrite(S1, LOW);   //0
+  digitalWrite(S2, HIGH);  //1
+  digitalWrite(S3, LOW);   //0
+
+  //0100 = pin c4 del multiplexor
+}
+
+//******PIERNA DERECHA*********
+//giroscopio 4 conectado a C5 - CADERA
+void out4(){
+  //c5
+  digitalWrite(S0, HIGH);  //1
+  digitalWrite(S1, LOW);   //0
+  digitalWrite(S2, HIGH);  //1
+  digitalWrite(S3, LOW);   //0
+  
+  //0101 = pin c5 del multiplexor
+}
+
+//giroscopio 5 conectado a C6 - RODILLA
+void out5(){
+  //c6
+  digitalWrite(S0, LOW);  //0
+  digitalWrite(S1, HIGH);   //1
+  digitalWrite(S2, HIGH);  //1
+  digitalWrite(S3, LOW);   //0
+  
+  //0110 = pin c6 del multiplexor
+}
+
+//giroscopio 6 conectado a C7 - TOBILLO
+void out6(){
+  //c7
+  digitalWrite(S0, HIGH);  //1
+  digitalWrite(S1, HIGH);   //1
+  digitalWrite(S2, HIGH);  //1
+  digitalWrite(S3, LOW);   //0
+  
+  //0111 = pin c7 del multiplexor
+}
+
+//********BRAZO IZQUIERDO*******
+//giroscopio 7 conectado a C8 - HOMBRO
+void out7(){
+  //c8
+  digitalWrite(S0, LOW);    //0
+  digitalWrite(S1, LOW);   //0
+  digitalWrite(S2, LOW);    //0
+  digitalWrite(S3, HIGH);    //1
+  //1000 = pin c8 del multiplexor
+}
+
+//giroscopio 8 conectado a C9 - CODO
+void out8(){
+  //c9
+  digitalWrite(S0, HIGH);  //1
+  digitalWrite(S1, LOW);  //0
+  digitalWrite(S2, LOW);   //0
+  digitalWrite(S3, HIGH);   //1
+
+  //1001 = pin c9 del multiplexor
+}
+
+//giroscopio 9 conectado a C10 - MUÑECA
+void out9(){
+  //c10
+  digitalWrite(S0, LOW);   //0
+  digitalWrite(S1, HIGH);   //1
+  digitalWrite(S2, LOW);  //0
+  digitalWrite(S3, HIGH);   //1
+  
+  //1010 = pin c10 del multiplexor
+}
+
+
+//******PIERNA IZQUIERDA*********
+//giroscopio 10 conectado a C11 - CADERA
+void out10(){
+  //c11
+  digitalWrite(S0, HIGH);  //1
+  digitalWrite(S1, HIGH);   //1
+  digitalWrite(S2, LOW);  //0
+  digitalWrite(S3, HIGH);   //1
+  
+  //1011 = pin c11 del multiplexor
+}
+
+//giroscopio 11 conectado a C12 - RODILLA
+void out11(){
+  //c6
+  digitalWrite(S0, LOW);  //0
+  digitalWrite(S1, LOW);   //0
+  digitalWrite(S2, HIGH);  //1
+  digitalWrite(S3, HIGH);   //1
+  
+  //1100 = pin c12 del multiplexor
+}
+
+//giroscopio 12 conectado a C13 - TOBILLO
+void out12(){
+  //c13
+  digitalWrite(S0, HIGH);  //1
+  digitalWrite(S1, LOW);   //0
+  digitalWrite(S2, HIGH);  //1
+  digitalWrite(S3, HIGH);   //1
+  
+  //1101 = pin c13 del multiplexor
+}
+
+//****CABEZA*****
+//giroscopio 13 conectado a C14 - CABEZA
+void out13(){
+  //c14
+  digitalWrite(S0, LOW);  //0
+  digitalWrite(S1, HIGH);   //1
+  digitalWrite(S2, HIGH);  //1
+  digitalWrite(S3, HIGH);   //1
+  
+  //1110 = pin c14 del multiplexor
+}
+
+
+//*****************************************************************
+
+// Init MPU6050
+void initMPU() {
+  
+  //out1();
+      //Iniciando el sensor
+out2();
+Wire.begin();           //Iniciando I2C
+  mpu.initialize();
+  if (mpu.testConnection()) Serial.println("Sensor iniciado correctamente");
+  else Serial.println("Error al iniciar el sensor");
+}
+
+
+//********************************************BRAZO DERECHO***********************************************************
+
+//HOMBRO DERECHO
+String getGyroAndAccHD() {
+  out1();
+Wire.begin();           //Iniciando I2C
+  mpu.initialize();
+
+  mpu.getRotation(&gXHD, &gYHD, &gZHD);
+  mpu.getAcceleration(&aXHD, &aYHD, &aZHD);
+
+float delta_t = 0.01;  // Ajusta este valor según tu frecuencia de muestreo
+
+// Definir los valores de los cuaterniones iniciales
+float q0 = 1.0;
+float q1 = 0.0;
+float q2 = 0.0;
+float q3 = 0.0;
+
+// Convertir los valores de aceleración en componentes gravitatorias
+float acceleration_magnitude = sqrt(aXHD * aXHD + aYHD * aYHD + aZHD * aZHD);
+if (acceleration_magnitude > 0.0) {
+  aXHD /= acceleration_magnitude;
+  aYHD /= acceleration_magnitude;
+  aZHD /= acceleration_magnitude;
+}
+
+// Calcular los componentes del cuaternión
+float gx = gXHD * delta_t;
+float gy = gYHD * delta_t;
+float gz = gZHD * delta_t;
+
+float qa = q0;
+float qb = q1;
+float qc = q2;
+float qd = q3;
+
+q0 = qa - qb * gx - qc * gy - qd * gz;
+q1 = qb + qa * gx + qc * gz - qd * gy;
+q2 = qc + qa * gy - qb * gz + qd * gx;
+q3 = qd + qa * gz + qb * gy - qc * gx;
+
+// Normalizar el cuaternión
+float quaternion_magnitude = sqrt(q0 * q0 + q1 * q1 + q2 * q2 + q3 * q3);
+q0 /= quaternion_magnitude;
+q1 /= quaternion_magnitude;
+q2 /= quaternion_magnitude;
+q3 /= quaternion_magnitude;
+
+
+    // Json Variable to Hold Sensor Readings
+    JSONVar readings;
+    readings["gXHD"] = String(gXHD);
+    readings["gYHD"] = String(gYHD);
+    readings["gZHD"] = String(gZHD);
+
+    // Get current acceleration values
+    readings["aXHD"] = String(aXHD);
+    readings["aYHD"] = String(aYHD);
+    readings["aZHD"] = String(aZHD);
+    readings["QHD"] = String("[" + String(q0) + "," + String(q1) + "," + String(q2) + "," + String(q3) + "]");
+    String accString = JSON.stringify (readings);
+    return accString;
+
+}
+
+
+//CODO DERECHO
+String getGyroAndAccCOD() {
+  out2();
+Wire.begin();           //Iniciando I2C
+  mpu.initialize();
+
+  mpu.getRotation(&gXCOD, &gYCOD, &gZCOD);
+  mpu.getAcceleration(&aXCOD, &aYCOD, &aZCOD);
+
+
+
+float delta_t = 0.01;  // Ajusta este valor según tu frecuencia de muestreo
+
+// Definir los valores de los cuaterniones iniciales
+float q0 = 1.0;
+float q1 = 0.0;
+float q2 = 0.0;
+float q3 = 0.0;
+
+// Convertir los valores de aceleración en componentes gravitatorias
+float acceleration_magnitude = sqrt(aXCOD * aXCOD + aYCOD * aYCOD + aZCOD * aZCOD);
+if (acceleration_magnitude > 0.0) {
+  aXCOD /= acceleration_magnitude;
+  aYCOD /= acceleration_magnitude;
+  aZCOD /= acceleration_magnitude;
+}
+
+// Calcular los componentes del cuaternión
+float gx = gXCOD * delta_t;
+float gy = gYCOD * delta_t;
+float gz = gZCOD * delta_t;
+
+float qa = q0;
+float qb = q1;
+float qc = q2;
+float qd = q3;
+
+q0 = qa - qb * gx - qc * gy - qd * gz;
+q1 = qb + qa * gx + qc * gz - qd * gy;
+q2 = qc + qa * gy - qb * gz + qd * gx;
+q3 = qd + qa * gz + qb * gy - qc * gx;
+
+// Normalizar el cuaternión
+float quaternion_magnitude = sqrt(q0 * q0 + q1 * q1 + q2 * q2 + q3 * q3);
+q0 /= quaternion_magnitude;
+q1 /= quaternion_magnitude;
+q2 /= quaternion_magnitude;
+q3 /= quaternion_magnitude;
+
+
+
+    // Json Variable to Hold Sensor Readings
+    JSONVar readings;
+    readings["gXCOD"] = String(gXCOD);
+    readings["gYCOD"] = String(gYCOD);
+    readings["gZCOD"] = String(gZCOD);
+
+
+    aXCOD = aXCOD;
+    aYCOD = aYCOD;
+    aZCOD = aZCOD;
+    readings["aXCOD"] = String(aXCOD);
+    readings["aYCOD"] = String(aYCOD);
+    readings["aZCOD"] = String(aZCOD);
+    readings["QCOD"] =  String("[" + String(q0) + "," + String(q1) + "," + String(q2) + "," + String(q3) + "]");
+
+    String accString = JSON.stringify (readings);
+    return accString;
+ 
+}
+
+//MUÑECA DERECHA
+String getGyroAndAccMD() {
+  out3();
+Wire.begin();           //Iniciando I2C
+  mpu.initialize();
+
+
+  mpu.getRotation(&gXMD, &gYMD, &gZMD);
+  mpu.getAcceleration(&aXMD, &aYMD, &aZMD);
+
+float delta_t = 0.01;  // Ajusta este valor según tu frecuencia de muestreo
+
+// Definir los valores de los cuaterniones iniciales
+float q0 = 1.0;
+float q1 = 0.0;
+float q2 = 0.0;
+float q3 = 0.0;
+
+// Convertir los valores de aceleración en componentes gravitatorias
+float acceleration_magnitude = sqrt(aXMD * aXMD + aYMD * aYMD + aZMD * aZMD);
+if (acceleration_magnitude > 0.0) {
+  aXMD /= acceleration_magnitude;
+  aYMD /= acceleration_magnitude;
+  aZMD /= acceleration_magnitude;
+}
+
+// Calcular los componentes del cuaternión
+float gx = gXMD * delta_t;
+float gy = gYMD * delta_t;
+float gz = gZMD * delta_t;
+
+float qa = q0;
+float qb = q1;
+float qc = q2;
+float qd = q3;
+
+q0 = qa - qb * gx - qc * gy - qd * gz;
+q1 = qb + qa * gx + qc * gz - qd * gy;
+q2 = qc + qa * gy - qb * gz + qd * gx;
+q3 = qd + qa * gz + qb * gy - qc * gx;
+
+// Normalizar el cuaternión
+float quaternion_magnitude = sqrt(q0 * q0 + q1 * q1 + q2 * q2 + q3 * q3);
+q0 /= quaternion_magnitude;
+q1 /= quaternion_magnitude;
+q2 /= quaternion_magnitude;
+q3 /= quaternion_magnitude;
+
+
+
+    // Json Variable to Hold Sensor Readings
+    JSONVar readings;
+    readings["gXMD"] = String(gXMD);
+    readings["gYMD"] = String(gYMD);
+    readings["gZMD"] = String(gZMD);
+
+
+
+    aXMD = aXMD;
+    aYMD = aYMD;
+    aZMD = aZMD;
+    readings["aXMD"] = String(aXMD);
+    readings["aYMD"] = String(aYMD);
+    readings["aZMD"] = String(aZMD);
+    readings["QMD"] = String("[" + String(q0) + "," + String(q1) + "," + String(q2) + "," + String(q3) + "]");
+    String accString = JSON.stringify (readings);
+    return accString;
+
+}
+
+//*********************************************************************************************************************
+
+
+//********************************************PIERNA DERECHA***********************************************************
+
+//CADERA DERECHA
+String getGyroAndAccCAD() {
+  out4();
+Wire.begin();           //Iniciando I2C
+  mpu.initialize();
+
+  mpu.getRotation(&gXCAD, &gYCAD, &gZCAD);
+  mpu.getAcceleration(&aXCAD, &aYCAD, &aZCAD);
+
+float delta_t = 0.01;  // Ajusta este valor según tu frecuencia de muestreo
+
+// Definir los valores de los cuaterniones iniciales
+float q0 = 1.0;
+float q1 = 0.0;
+float q2 = 0.0;
+float q3 = 0.0;
+
+// Convertir los valores de aceleración en componentes gravitatorias
+float acceleration_magnitude = sqrt(aXCAD * aXCAD + aYCAD * aYCAD + aZCAD * aZCAD);
+if (acceleration_magnitude > 0.0) {
+  aXCAD /= acceleration_magnitude;
+  aYCAD /= acceleration_magnitude;
+  aZCAD /= acceleration_magnitude;
+}
+
+// Calcular los componentes del cuaternión
+float gx = gXCAD * delta_t;
+float gy = gYCAD * delta_t;
+float gz = gZCAD * delta_t;
+
+float qa = q0;
+float qb = q1;
+float qc = q2;
+float qd = q3;
+
+q0 = qa - qb * gx - qc * gy - qd * gz;
+q1 = qb + qa * gx + qc * gz - qd * gy;
+q2 = qc + qa * gy - qb * gz + qd * gx;
+q3 = qd + qa * gz + qb * gy - qc * gx;
+
+// Normalizar el cuaternión
+float quaternion_magnitude = sqrt(q0 * q0 + q1 * q1 + q2 * q2 + q3 * q3);
+q0 /= quaternion_magnitude;
+q1 /= quaternion_magnitude;
+q2 /= quaternion_magnitude;
+q3 /= quaternion_magnitude;
+
+
+    // Json Variable to Hold Sensor Readings
+    JSONVar readings;
+    readings["gXCAD"] = String(gXCAD);
+    readings["gYCAD"] = String(gYCAD);
+    readings["gZCAD"] = String(gZCAD);
+
+    // Get current acceleration values
+    readings["aXCAD"] = String(aXCAD);
+    readings["aYCAD"] = String(aYCAD);
+    readings["aZCAD"] = String(aZCAD);
+    readings["QCAD"] = String("[" + String(q0) + "," + String(q1) + "," + String(q2) + "," + String(q3) + "]");
+    String accString = JSON.stringify (readings);
+    return accString;
+
+}
+
+
+//RODILLA DERECHA
+String getGyroAndAccRD() {
+  out5();
+Wire.begin();           //Iniciando I2C
+  mpu.initialize();
+
+  mpu.getRotation(&gXRD, &gYRD, &gZRD);
+  mpu.getAcceleration(&aXRD, &aYRD, &aZRD);
+
+
+
+float delta_t = 0.01;  // Ajusta este valor según tu frecuencia de muestreo
+
+// Definir los valores de los cuaterniones iniciales
+float q0 = 1.0;
+float q1 = 0.0;
+float q2 = 0.0;
+float q3 = 0.0;
+
+// Convertir los valores de aceleración en componentes gravitatorias
+float acceleration_magnitude = sqrt(aXRD * aXRD + aYRD * aYRD + aZRD * aZRD);
+if (acceleration_magnitude > 0.0) {
+  aXRD /= acceleration_magnitude;
+  aYRD /= acceleration_magnitude;
+  aZRD /= acceleration_magnitude;
+}
+
+// Calcular los componentes del cuaternión
+float gx = gXRD * delta_t;
+float gy = gYRD * delta_t;
+float gz = gZRD * delta_t;
+
+float qa = q0;
+float qb = q1;
+float qc = q2;
+float qd = q3;
+
+q0 = qa - qb * gx - qc * gy - qd * gz;
+q1 = qb + qa * gx + qc * gz - qd * gy;
+q2 = qc + qa * gy - qb * gz + qd * gx;
+q3 = qd + qa * gz + qb * gy - qc * gx;
+
+// Normalizar el cuaternión
+float quaternion_magnitude = sqrt(q0 * q0 + q1 * q1 + q2 * q2 + q3 * q3);
+q0 /= quaternion_magnitude;
+q1 /= quaternion_magnitude;
+q2 /= quaternion_magnitude;
+q3 /= quaternion_magnitude;
+
+
+
+    // Json Variable to Hold Sensor Readings
+    JSONVar readings;
+    readings["gXRD"] = String(gXRD);
+    readings["gYRD"] = String(gYRD);
+    readings["gZRD"] = String(gZRD);
+
+
+    aXRD = aXRD;
+    aYRD = aYRD;
+    aZRD = aZRD;
+    readings["aXRD"] = String(aXRD);
+    readings["aYRD"] = String(aYRD);
+    readings["aZRD"] = String(aZRD);
+    readings["QRD"] =  String("[" + String(q0) + "," + String(q1) + "," + String(q2) + "," + String(q3) + "]");
+
+    String accString = JSON.stringify (readings);
+    return accString;
+ 
+}
+
+//TOBILLO DERECHO
+String getGyroAndAccTD() {
+  out6();
+Wire.begin();           //Iniciando I2C
+  mpu.initialize();
+
+
+  mpu.getRotation(&gXTD, &gYTD, &gZTD);
+  mpu.getAcceleration(&aXTD, &aYTD, &aZTD);
+
+float delta_t = 0.01;  // Ajusta este valor según tu frecuencia de muestreo
+
+// Definir los valores de los cuaterniones iniciales
+float q0 = 1.0;
+float q1 = 0.0;
+float q2 = 0.0;
+float q3 = 0.0;
+
+// Convertir los valores de aceleración en componentes gravitatorias
+float acceleration_magnitude = sqrt(aXTD * aXTD + aYTD * aYTD + aZTD * aZTD);
+if (acceleration_magnitude > 0.0) {
+  aXTD /= acceleration_magnitude;
+  aYTD /= acceleration_magnitude;
+  aZTD /= acceleration_magnitude;
+}
+
+// Calcular los componentes del cuaternión
+float gx = gXTD * delta_t;
+float gy = gYTD * delta_t;
+float gz = gZTD * delta_t;
+
+float qa = q0;
+float qb = q1;
+float qc = q2;
+float qd = q3;
+
+q0 = qa - qb * gx - qc * gy - qd * gz;
+q1 = qb + qa * gx + qc * gz - qd * gy;
+q2 = qc + qa * gy - qb * gz + qd * gx;
+q3 = qd + qa * gz + qb * gy - qc * gx;
+
+// Normalizar el cuaternión
+float quaternion_magnitude = sqrt(q0 * q0 + q1 * q1 + q2 * q2 + q3 * q3);
+q0 /= quaternion_magnitude;
+q1 /= quaternion_magnitude;
+q2 /= quaternion_magnitude;
+q3 /= quaternion_magnitude;
+
+
+
+    // Json Variable to Hold Sensor Readings
+    JSONVar readings;
+    readings["gXTD"] = String(gXTD);
+    readings["gYTD"] = String(gYTD);
+    readings["gZTD"] = String(gZTD);
+
+
+
+    aXTD = aXTD;
+    aYTD = aYTD;
+    aZTD = aZTD;
+    readings["aXTD"] = String(aXTD);
+    readings["aYTD"] = String(aYTD);
+    readings["aZTD"] = String(aZTD);
+    readings["QTD"] = String("[" + String(q0) + "," + String(q1) + "," + String(q2) + "," + String(q3) + "]");
+    String accString = JSON.stringify (readings);
+    return accString;
+
+}
+
+//*********************************************************************************************************************
+
+
+//********************************************BRAZO IZQUIERDO***********************************************************
+
+//HOMBRO IZQUIERDO
+String getGyroAndAccHI() {
+  out7();
+Wire.begin();           //Iniciando I2C
+  mpu.initialize();
+
+  mpu.getRotation(&gXHI, &gYHI, &gZHI);
+  mpu.getAcceleration(&aXHI, &aYHI, &aZHI);
+
+float delta_t = 0.01;  // Ajusta este valor según tu frecuencia de muestreo
+
+// Definir los valores de los cuaterniones iniciales
+float q0 = 1.0;
+float q1 = 0.0;
+float q2 = 0.0;
+float q3 = 0.0;
+
+// Convertir los valores de aceleración en componentes gravitatorias
+float acceleration_magnitude = sqrt(aXHI * aXHI + aYHI * aYHI + aZHI * aZHI);
+if (acceleration_magnitude > 0.0) {
+  aXHI /= acceleration_magnitude;
+  aYHI /= acceleration_magnitude;
+  aZHI /= acceleration_magnitude;
+}
+
+// Calcular los componentes del cuaternión
+float gx = gXHI * delta_t;
+float gy = gYHI * delta_t;
+float gz = gZHI * delta_t;
+
+float qa = q0;
+float qb = q1;
+float qc = q2;
+float qd = q3;
+
+q0 = qa - qb * gx - qc * gy - qd * gz;
+q1 = qb + qa * gx + qc * gz - qd * gy;
+q2 = qc + qa * gy - qb * gz + qd * gx;
+q3 = qd + qa * gz + qb * gy - qc * gx;
+
+// Normalizar el cuaternión
+float quaternion_magnitude = sqrt(q0 * q0 + q1 * q1 + q2 * q2 + q3 * q3);
+q0 /= quaternion_magnitude;
+q1 /= quaternion_magnitude;
+q2 /= quaternion_magnitude;
+q3 /= quaternion_magnitude;
+
+
+    // Json Variable to Hold Sensor Readings
+    JSONVar readings;
+    readings["gXHI"] = String(gXHI);
+    readings["gYHI"] = String(gYHI);
+    readings["gZHI"] = String(gZHI);
+
+    // Get current acceleration values
+    readings["aXHI"] = String(aXHI);
+    readings["aYHI"] = String(aYHI);
+    readings["aZHI"] = String(aZHI);
+    readings["QHI"] = String("[" + String(q0) + "," + String(q1) + "," + String(q2) + "," + String(q3) + "]");
+    String accString = JSON.stringify (readings);
+    return accString;
+
+}
+
+
+//CODO IZQUIERDO
+String getGyroAndAccCOI() {
+  out8();
+Wire.begin();           //Iniciando I2C
+  mpu.initialize();
+
+  mpu.getRotation(&gXCOI, &gYCOI, &gZCOI);
+  mpu.getAcceleration(&aXCOI, &aYCOI, &aZCOI);
+
+
+
+float delta_t = 0.01;  // Ajusta este valor según tu frecuencia de muestreo
+
+// Definir los valores de los cuaterniones iniciales
+float q0 = 1.0;
+float q1 = 0.0;
+float q2 = 0.0;
+float q3 = 0.0;
+
+// Convertir los valores de aceleración en componentes gravitatorias
+float acceleration_magnitude = sqrt(aXCOI * aXCOI + aYCOI * aYCOI + aZCOI * aZCOI);
+if (acceleration_magnitude > 0.0) {
+  aXCOI /= acceleration_magnitude;
+  aYCOI /= acceleration_magnitude;
+  aZCOI /= acceleration_magnitude;
+}
+
+// Calcular los componentes del cuaternión
+float gx = gXCOI * delta_t;
+float gy = gYCOI * delta_t;
+float gz = gZCOI * delta_t;
+
+float qa = q0;
+float qb = q1;
+float qc = q2;
+float qd = q3;
+
+q0 = qa - qb * gx - qc * gy - qd * gz;
+q1 = qb + qa * gx + qc * gz - qd * gy;
+q2 = qc + qa * gy - qb * gz + qd * gx;
+q3 = qd + qa * gz + qb * gy - qc * gx;
+
+// Normalizar el cuaternión
+float quaternion_magnitude = sqrt(q0 * q0 + q1 * q1 + q2 * q2 + q3 * q3);
+q0 /= quaternion_magnitude;
+q1 /= quaternion_magnitude;
+q2 /= quaternion_magnitude;
+q3 /= quaternion_magnitude;
+
+
+
+    // Json Variable to Hold Sensor Readings
+    JSONVar readings;
+    readings["gXCOI"] = String(gXCOI);
+    readings["gYCOI"] = String(gYCOI);
+    readings["gZCOI"] = String(gZCOI);
+
+
+    aXCOI = aXCOI;
+    aYCOI = aYCOI;
+    aZCOI = aZCOI;
+    readings["aXCOI"] = String(aXCOI);
+    readings["aYCOI"] = String(aYCOI);
+    readings["aZCOI"] = String(aZCOI);
+    readings["QCOI"] =  String("[" + String(q0) + "," + String(q1) + "," + String(q2) + "," + String(q3) + "]");
+
+    String accString = JSON.stringify (readings);
+    return accString;
+ 
+}
+
+//MUÑECA IZQUIERDA
+String getGyroAndAccMI() {
+  out9();
+Wire.begin();           //Iniciando I2C
+  mpu.initialize();
+
+
+  mpu.getRotation(&gXMI, &gYMI, &gZMI);
+  mpu.getAcceleration(&aXMI, &aYMI, &aZMI);
+
+float delta_t = 0.01;  // Ajusta este valor según tu frecuencia de muestreo
+
+// Definir los valores de los cuaterniones iniciales
+float q0 = 1.0;
+float q1 = 0.0;
+float q2 = 0.0;
+float q3 = 0.0;
+
+// Convertir los valores de aceleración en componentes gravitatorias
+float acceleration_magnitude = sqrt(aXMI * aXMI + aYMI * aYMI + aZMI * aZMI);
+if (acceleration_magnitude > 0.0) {
+  aXMI /= acceleration_magnitude;
+  aYMI /= acceleration_magnitude;
+  aZMI /= acceleration_magnitude;
+}
+
+// Calcular los componentes del cuaternión
+float gx = gXMI * delta_t;
+float gy = gYMI * delta_t;
+float gz = gZMI * delta_t;
+
+float qa = q0;
+float qb = q1;
+float qc = q2;
+float qd = q3;
+
+q0 = qa - qb * gx - qc * gy - qd * gz;
+q1 = qb + qa * gx + qc * gz - qd * gy;
+q2 = qc + qa * gy - qb * gz + qd * gx;
+q3 = qd + qa * gz + qb * gy - qc * gx;
+
+// Normalizar el cuaternión
+float quaternion_magnitude = sqrt(q0 * q0 + q1 * q1 + q2 * q2 + q3 * q3);
+q0 /= quaternion_magnitude;
+q1 /= quaternion_magnitude;
+q2 /= quaternion_magnitude;
+q3 /= quaternion_magnitude;
+
+
+
+    // Json Variable to Hold Sensor Readings
+    JSONVar readings;
+    readings["gXMI"] = String(gXMI);
+    readings["gYMI"] = String(gYMI);
+    readings["gZMI"] = String(gZMI);
+
+
+
+    aXMI = aXMI;
+    aYMI = aYMI;
+    aZMI = aZMI;
+    readings["aXMI"] = String(aXMI);
+    readings["aYMI"] = String(aYMI);
+    readings["aZMI"] = String(aZMI);
+    readings["QMI"] = String("[" + String(q0) + "," + String(q1) + "," + String(q2) + "," + String(q3) + "]");
+    String accString = JSON.stringify (readings);
+    return accString;
+
+}
+
+//*********************************************************************************************************************
+
+
+//********************************************PIERNA IZQUIERDA***********************************************************
+
+//CADERA IZQUIERDA
+String getGyroAndAccCAI() {
+  out10();
+Wire.begin();           //Iniciando I2C
+  mpu.initialize();
+
+  mpu.getRotation(&gXCAI, &gYCAI, &gZCAI);
+  mpu.getAcceleration(&aXCAI, &aYCAI, &aZCAI);
+
+float delta_t = 0.01;  // Ajusta este valor según tu frecuencia de muestreo
+
+// Definir los valores de los cuaterniones iniciales
+float q0 = 1.0;
+float q1 = 0.0;
+float q2 = 0.0;
+float q3 = 0.0;
+
+// Convertir los valores de aceleración en componentes gravitatorias
+float acceleration_magnitude = sqrt(aXCAI * aXCAI + aYCAI * aYCAI + aZCAI * aZCAI);
+if (acceleration_magnitude > 0.0) {
+  aXCAI /= acceleration_magnitude;
+  aYCAI /= acceleration_magnitude;
+  aZCAI /= acceleration_magnitude;
+}
+
+// Calcular los componentes del cuaternión
+float gx = gXCAI * delta_t;
+float gy = gYCAI * delta_t;
+float gz = gZCAI * delta_t;
+
+float qa = q0;
+float qb = q1;
+float qc = q2;
+float qd = q3;
+
+q0 = qa - qb * gx - qc * gy - qd * gz;
+q1 = qb + qa * gx + qc * gz - qd * gy;
+q2 = qc + qa * gy - qb * gz + qd * gx;
+q3 = qd + qa * gz + qb * gy - qc * gx;
+
+// Normalizar el cuaternión
+float quaternion_magnitude = sqrt(q0 * q0 + q1 * q1 + q2 * q2 + q3 * q3);
+q0 /= quaternion_magnitude;
+q1 /= quaternion_magnitude;
+q2 /= quaternion_magnitude;
+q3 /= quaternion_magnitude;
+
+
+    // Json Variable to Hold Sensor Readings
+    JSONVar readings;
+    readings["gXCAI"] = String(gXCAI);
+    readings["gYCAI"] = String(gYCAI);
+    readings["gZCAI"] = String(gZCAI);
+
+    // Get current acceleration values
+    readings["aXCAI"] = String(aXCAI);
+    readings["aYCAI"] = String(aYCAI);
+    readings["aZCAI"] = String(aZCAI);
+    readings["QCAI"] = String("[" + String(q0) + "," + String(q1) + "," + String(q2) + "," + String(q3) + "]");
+    String accString = JSON.stringify (readings);
+    return accString;
+
+}
+
+
+//RODILLA DERECHA
+String getGyroAndAccRI() {
+  out11();
+Wire.begin();           //Iniciando I2C
+  mpu.initialize();
+
+  mpu.getRotation(&gXRI, &gYRI, &gZRI);
+  mpu.getAcceleration(&aXRI, &aYRI, &aZRI);
+
+
+
+float delta_t = 0.01;  // Ajusta este valor según tu frecuencia de muestreo
+
+// Definir los valores de los cuaterniones iniciales
+float q0 = 1.0;
+float q1 = 0.0;
+float q2 = 0.0;
+float q3 = 0.0;
+
+// Convertir los valores de aceleración en componentes gravitatorias
+float acceleration_magnitude = sqrt(aXRI * aXRI + aYRI * aYRI + aZRI * aZRI);
+if (acceleration_magnitude > 0.0) {
+  aXRI /= acceleration_magnitude;
+  aYRI /= acceleration_magnitude;
+  aZRI /= acceleration_magnitude;
+}
+
+// Calcular los componentes del cuaternión
+float gx = gXRI * delta_t;
+float gy = gYRI * delta_t;
+float gz = gZRI * delta_t;
+
+float qa = q0;
+float qb = q1;
+float qc = q2;
+float qd = q3;
+
+q0 = qa - qb * gx - qc * gy - qd * gz;
+q1 = qb + qa * gx + qc * gz - qd * gy;
+q2 = qc + qa * gy - qb * gz + qd * gx;
+q3 = qd + qa * gz + qb * gy - qc * gx;
+
+// Normalizar el cuaternión
+float quaternion_magnitude = sqrt(q0 * q0 + q1 * q1 + q2 * q2 + q3 * q3);
+q0 /= quaternion_magnitude;
+q1 /= quaternion_magnitude;
+q2 /= quaternion_magnitude;
+q3 /= quaternion_magnitude;
+
+
+
+    // Json Variable to Hold Sensor Readings
+    JSONVar readings;
+    readings["gXRI"] = String(gXRI);
+    readings["gYRI"] = String(gYRI);
+    readings["gZRI"] = String(gZRI);
+
+
+    aXRI = aXRI;
+    aYRI = aYRI;
+    aZRI = aZRI;
+    readings["aXRI"] = String(aXRI);
+    readings["aYRI"] = String(aYRI);
+    readings["aZRI"] = String(aZRI);
+    readings["QRI"] =  String("[" + String(q0) + "," + String(q1) + "," + String(q2) + "," + String(q3) + "]");
+
+    String accString = JSON.stringify (readings);
+    return accString;
+ 
+}
+
+//TOBILLO IZQUIERDO
+String getGyroAndAccTI() {
+  out12();
+Wire.begin();           //Iniciando I2C
+  mpu.initialize();
+
+
+  mpu.getRotation(&gXTI, &gYTI, &gZTI);
+  mpu.getAcceleration(&aXTI, &aYTI, &aZTI);
+
+float delta_t = 0.01;  // Ajusta este valor según tu frecuencia de muestreo
+
+// Definir los valores de los cuaterniones iniciales
+float q0 = 1.0;
+float q1 = 0.0;
+float q2 = 0.0;
+float q3 = 0.0;
+
+// Convertir los valores de aceleración en componentes gravitatorias
+float acceleration_magnitude = sqrt(aXTI * aXTI + aYTI * aYTI + aZTI * aZTI);
+if (acceleration_magnitude > 0.0) {
+  aXTI /= acceleration_magnitude;
+  aYTI /= acceleration_magnitude;
+  aZTI /= acceleration_magnitude;
+}
+
+// Calcular los componentes del cuaternión
+float gx = gXTI * delta_t;
+float gy = gYTI * delta_t;
+float gz = gZTI * delta_t;
+
+float qa = q0;
+float qb = q1;
+float qc = q2;
+float qd = q3;
+
+q0 = qa - qb * gx - qc * gy - qd * gz;
+q1 = qb + qa * gx + qc * gz - qd * gy;
+q2 = qc + qa * gy - qb * gz + qd * gx;
+q3 = qd + qa * gz + qb * gy - qc * gx;
+
+// Normalizar el cuaternión
+float quaternion_magnitude = sqrt(q0 * q0 + q1 * q1 + q2 * q2 + q3 * q3);
+q0 /= quaternion_magnitude;
+q1 /= quaternion_magnitude;
+q2 /= quaternion_magnitude;
+q3 /= quaternion_magnitude;
+
+
+
+    // Json Variable to Hold Sensor Readings
+    JSONVar readings;
+    readings["gXTI"] = String(gXTI);
+    readings["gYTI"] = String(gYTI);
+    readings["gZTI"] = String(gZTI);
+
+
+
+    aXTI = aXTI;
+    aYTI = aYTI;
+    aZTI = aZTI;
+    readings["aXTI"] = String(aXTI);
+    readings["aYTI"] = String(aYTI);
+    readings["aZTI"] = String(aZTI);
+    readings["QTI"] = String("[" + String(q0) + "," + String(q1) + "," + String(q2) + "," + String(q3) + "]");
+    String accString = JSON.stringify (readings);
+    return accString;
+
+}
+
+//*********************************************************************************************************************
+
+//********************************************CABEZA***********************************************************
+
+//CABEZA
+String getGyroAndAccCA() {
+  out13();
+Wire.begin();           //Iniciando I2C
+  mpu.initialize();
+
+
+  mpu.getRotation(&gXCA, &gYCA, &gZCA);
+  mpu.getAcceleration(&aXCA, &aYCA, &aZCA);
+
+float delta_t = 0.01;  // Ajusta este valor según tu frecuencia de muestreo
+
+// Definir los valores de los cuaterniones iniciales
+float q0 = 1.0;
+float q1 = 0.0;
+float q2 = 0.0;
+float q3 = 0.0;
+
+// Convertir los valores de aceleración en componentes gravitatorias
+float acceleration_magnitude = sqrt(aXCA * aXCA + aYCA * aYCA + aZCA * aZCA);
+if (acceleration_magnitude > 0.0) {
+  aXCA /= acceleration_magnitude;
+  aYCA /= acceleration_magnitude;
+  aZCA /= acceleration_magnitude;
+}
+
+// Calcular los componentes del cuaternión
+float gx = gXCA * delta_t;
+float gy = gYCA * delta_t;
+float gz = gZCA * delta_t;
+
+float qa = q0;
+float qb = q1;
+float qc = q2;
+float qd = q3;
+
+q0 = qa - qb * gx - qc * gy - qd * gz;
+q1 = qb + qa * gx + qc * gz - qd * gy;
+q2 = qc + qa * gy - qb * gz + qd * gx;
+q3 = qd + qa * gz + qb * gy - qc * gx;
+
+// Normalizar el cuaternión
+float quaternion_magnitude = sqrt(q0 * q0 + q1 * q1 + q2 * q2 + q3 * q3);
+q0 /= quaternion_magnitude;
+q1 /= quaternion_magnitude;
+q2 /= quaternion_magnitude;
+q3 /= quaternion_magnitude;
+
+
+
+    // Json Variable to Hold Sensor Readings
+    JSONVar readings;
+    readings["gXCA"] = String(gXCA);
+    readings["gYCA"] = String(gYCA);
+    readings["gZCA"] = String(gZCA);
+
+
+
+    aXCA = aXCA;
+    aYCA = aYCA;
+    aZCA = aZCA;
+    readings["aXCA"] = String(aXCA);
+    readings["aYCA"] = String(aYCA);
+    readings["aZCA"] = String(aZCA);
+    readings["QCA"] = String("[" + String(q0) + "," + String(q1) + "," + String(q2) + "," + String(q3) + "]");
+    String accString = JSON.stringify (readings);
+    return accString;
+
+}
+
+//*********************************************************************************************************************
+
+WiFiServer server(80);
+
+void setup() {
+///-------------------added------------------------------
+    //declaramos los pines que están conectados al MUX como salida
+  pinMode(S0, OUTPUT);
+  pinMode(S1, OUTPUT);
+  pinMode(S2, OUTPUT);
+  pinMode(S3, OUTPUT);
+
+  
+  //declaramos el pin conectado a int como salida
+  pinMode(in, OUTPUT);
+
+  //declaramos el pin conectado a int como bajo
+  digitalWrite(in, LOW);  //0
+    initMPU();
+  ///----------------------------------------------------------------------------------------
+  Wire.begin(4, 5);  // Pines SDA y SCL del ESP8266 (D1 y D2)
+
+
+  Serial.begin(115200);
+  delay(10);
+
+  //Configuración  del GPIO2
+  pinMode(2, OUTPUT);
+  digitalWrite(2, LOW);
+
+
+  Serial.println();
+  Serial.println();
+  Serial.print("Conectandose a red : ");
+  Serial.println(ssid);
+
+  WiFi.begin(ssid, password); //Conexión a la red
+
+  while (WiFi.status() != WL_CONNECTED)
+  {
+    delay(500);
+    Serial.print(".");
+  }
+  Serial.println("");
+  Serial.println("WiFi conectado");
+
+
+  server.begin(); //Iniciamos el servidor
+  Serial.println("Servidor Iniciado");
+
+
+  Serial.println("Ingrese desde un navegador web usando la siguiente IP:");
+  Serial.println(WiFi.localIP()); //Obtenemos la IP
+
+
+
+  // Inicializar los sensores
+
+}
+
+void loop() {
+
+  WiFiClient client = server.available();
+  if (client){ //Si hay un cliente presente
+  
+  //Serial.print("SENSOR 1 - HD\n");
+  String sensorHD= getGyroAndAccHD();
+  
+  //Serial.print("SENSOR 2 - COD\n");
+  String sensorCOD= getGyroAndAccCOD();
+  
+  //Serial.print("SENSOR 3 - MD\n");
+  String sensorMD= getGyroAndAccMD();
+  
+  //Serial.print("SENSOR 4 - CAD\n");
+  String sensorCAD= getGyroAndAccCAD();
+  
+  //Serial.print("SENSOR 5 - RD\n");
+  String sensorRD= getGyroAndAccRD();
+  
+  //Serial.print("SENSOR 6 - TD\n");
+  String sensorTD= getGyroAndAccTD();
+  
+  //Serial.print("SENSOR 7 - HI\n");
+  String sensorHI= getGyroAndAccHI();
+  
+  //Serial.print("SENSOR 8 - COI\n");
+  String sensorCOI= getGyroAndAccCOI();
+  
+  //Serial.print("SENSOR 9 - MI\n");
+  String sensorMI= getGyroAndAccMI();
+  
+  //Serial.print("SENSOR 10 - CAI\n");
+  String sensorCAI= getGyroAndAccCAI();
+  
+  //Serial.print("SENSOR 11 - RI\n");
+  String sensorRI= getGyroAndAccRI();
+  
+  //Serial.print("SENSOR 12 - TI\n");
+  String sensorTI= getGyroAndAccTI();
+
+  //Serial.print("SENSOR 13 - CABEZA\n");
+  String sensorCA= getGyroAndAccCA();
+
+
+
+//  String totalJson="["+sensorHD+","+sensorCOD+","+sensorMD+","+sensorCAD+","+sensorRD+","+sensorTD+","+sensorHI+","+sensorCOI+","+sensorMI+","+sensorCAI+","+sensorRI+","+sensorTI+","+sensorCABEZA+"]";
+
+  String totalJson="["+sensorHD+","+sensorCOD+","+sensorMD+","+sensorHI+","+sensorCOI+","+sensorMI+","+sensorCAD+","+sensorRD+","+sensorTD+","+sensorCAI+","+sensorRI+","+sensorTI+","+sensorCA+"]";
+
+    Serial.println("Nuevo Cliente");
+
+    //esperamos hasta que hayan datos disponibles
+    while (!client.available() && client.connected())
+    {
+      delay(1);
+    }
+
+    // Leemos la primera línea de la petición del cliente.
+    String linea1 = client.readStringUntil('r');
+    Serial.println(linea1);
+
+
+    client.flush();
+
+    Serial.println("Enviando respuesta...");
+    //Encabesado http
+    client.println("HTTP/1.1 200 OK");
+client.println("Content-Type: application/json");
+
+    client.println("Connection: close");// La conexión se cierra después de finalizar de la respuesta
+    client.println();
+    //Pagina html  para en el navegador
+    client.println(totalJson);
+
+    delay(100);
+    Serial.println("respuesta enviada");
+    Serial.println();
+
+  }
+}
